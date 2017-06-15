@@ -14,6 +14,8 @@ function get_results($result_id){
     // the data directory
     $result_dir = DATA_PATH."/".$result_id."/results/";
 
+    if(! file_exists($result_dir)) throw new Exception("There are no results available for Result ID <strong>".$result_id."</strong>", 501);
+
     // parse motifs nr from KLD.txt file
     $motifs = parse_KLD_motifs($result_dir."/KLD/KLD.txt");
 
