@@ -33,12 +33,23 @@ $app = new \Slim\App([
 ]);
 
 
-$app->post('/peptides/{nr_motifs}', function ($request, $response, $nr_motifs){
+$c = $app->getContainer();
+$c['errorHandler'] = function ($c) {
+    return function ($request, $response, $exception) use ($c) {
+        $statusCode = ($exception->getCode() !== 501) ? 500 : 501;
+        return $c['response']->withStatus($statusCode)
+            ->withHeader('Content-Type', 'application/json')
+            ->write(json_encode($exception->getMessage()));
+    };
+};
+
+
+$app->post('/peptides', function ($request, $response, $nr_motifs){
 	require 'peptides.php';
     $dataset = $request->getParsedBody();
     $data_info = upload_fasta($dataset);
-	$result_id = compute_clusters($data_info, $nr_motifs['nr_motifs']);
-	echo($result_id);
+	$result = compute_clusters($data_info, $_POST['nr_of_motifs']);
+    return $response->withJson($result);
 });
 
 

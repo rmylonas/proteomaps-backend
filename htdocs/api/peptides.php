@@ -5,7 +5,7 @@
  * Call the MixMHCp script
  *
  * @param $upload_info array result_id and filename
- * @return string result_id
+ * @return array result_id,
  * @author Roman
  */
 function compute_clusters($upload_info, $nr_motifs){
@@ -14,7 +14,7 @@ function compute_clusters($upload_info, $nr_motifs){
     $filename = $upload_info["filename"];
 
     // check if nr_clusters > 0
-    if(! intval($nr_motifs) > 0) throw new Exception("Invalid number of motifs", 501);;
+    if(! intval($nr_motifs) > 0) throw new Exception("Invalid number of motifs", 501);
 
 	// create the results folder
     $result_dir = DATA_PATH."/".$result_id."/results/";
@@ -26,10 +26,16 @@ function compute_clusters($upload_info, $nr_motifs){
 
     // call MixMHCp
     $cmd = MIXMHCP_PATH." -i ".$input_file." -o ".$result_dir. " -m ".$nr_motifs;
-    $output = shell_exec($cmd);
+    exec($cmd, $output);
     file_put_contents($log_file, $output);
 
-	return $result_id;
+    // the exit_code is always 0, so we look for the logos.html to see if everything went OK
+    $has_error = ! file_exists($result_dir."/logos.html");
+
+    $pipeline_log = file_get_contents($result_dir."/pipeline.log");
+    if($has_error) throw new Exception($pipeline_log, 501);
+
+	return array('result_id' => $result_id, 'has_error' => $has_error, 'pipeline_log' => $pipeline_log);
 }
 
 /**
@@ -40,8 +46,6 @@ function compute_clusters($upload_info, $nr_motifs){
  * @author Roman
  */
 function upload_fasta($dataset){
-    error_log(json_encode($dataset));
-
     if(!isset($_FILES['file'])) throw new Exception("No file received", 501);
 
     // create a new ResultID

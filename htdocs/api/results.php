@@ -11,8 +11,109 @@
  */
 
 function get_results($result_id){
-    $res = array('result_id' => $result_id, 'html_file' => $result_id.'/results/logos.html');
+    // the data directory
+    $result_dir = DATA_PATH."/".$result_id."/results/";
+
+    // parse motifs nr from KLD.txt file
+    $motifs = parse_KLD_motifs($result_dir."/KLD/KLD.txt");
+
+    // construct results
+    $res = array('result_id' => $result_id);
+
+    foreach($motifs as $motif){
+       $img_files = get_img_filenames($result_dir."/logos/LoLa_".$motif."*");
+       $nr_peps = get_nr_peps($img_files);
+       $pmw_values = get_pmw_values($result_dir."/Multiple_PWMs/PWM_".$motif."*");
+
+       if(count($img_files) != count($pmw_values)) throw new Exception("Number of Logos and PWMs differ", 501);
+
+       $res_func = function($id, $img, $pmw, $nr_pep){
+           return array('id' => $id+1, 'logo_img' => $img, 'PMW' => $pmw, 'nr_peptides' => $nr_pep);
+       };
+
+       $res[$motif] = array_map(
+           $res_func,
+           range(0, count($img_files)-1),
+           $img_files,
+           $pmw_values,
+           $nr_peps
+       );
+    }
+
     return $res;
+}
+
+/**
+ * get_nr_peps
+ *
+ * parse number of peptides from logo file name
+ *
+ * @param string $img_names Logo file name
+ * @return array of nr of peptides
+ * @author Roman
+ */
+function get_nr_peps($img_names){
+    return array_map(function($name){
+        preg_match('/.+\-(\d+)\.png$/', $name, $matches);
+        return $matches[1];
+    }, $img_names);
+}
+
+/**
+ * get_pmw_values
+ *
+ * parse PMW values from PMW files
+ *
+ * @param string $pattern the file search pattern
+ * @return array of PMW values
+ * @author Roman
+ */
+function get_pmw_values($pattern){
+    $pmw_files = glob($pattern);
+
+    $pmw_parsing = function($file){
+        $filename = basename($file);
+        $pmw_name = str_replace(".txt", "", $filename);
+        $pmw_content = file_get_contents($file);
+        preg_match('/'.$pmw_name.'\s+([\d|\.]+).*/', $pmw_content, $matches);
+        return $matches[1];
+    };
+
+    return array_map($pmw_parsing, $pmw_files);
+}
+
+
+/**
+ * get_img_filenames
+ *
+ * get all the Logos filenames for a given directory
+ *
+ * @param string $pattern the file search pattern
+ * @return array
+ * @author Roman
+ */
+function get_img_filenames($pattern){
+    $img_files = glob($pattern);
+
+    return array_map(function($p){
+        return basename($p);
+    }, $img_files);
+}
+
+
+/**
+ * parse_KLD_motifs
+ *
+ * get an array of motifs
+ *
+ * @param KLD file path
+ * @return array of motif numbers
+ * @author Roman
+ */
+function parse_KLD_motifs($kld_file){
+    $content = file_get_contents($kld_file);
+    preg_match_all("/(\\d+)\\s+.*/", $content, $out);
+    return $out[1];
 }
 
 

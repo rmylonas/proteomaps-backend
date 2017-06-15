@@ -19,7 +19,7 @@ if(!defined('INCLUDE_PATH')) define("INCLUDE_PATH",dirname(__FILE__)."/../tools/
 if(!defined('CORS')) define('CORS',true);
 
 // Set the debug state of the application. Might be used to display some debugging messages
-if(!defined('DEBUG')) define('DEBUG',true);
+if(!defined('DEBUG')) define('DEBUG',false);
 
 if(!defined('GRIP_PATH')) define('GRIP_PATH',"/usr/local/bin/grip");
 

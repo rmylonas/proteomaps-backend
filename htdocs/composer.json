@@ -2,12 +2,12 @@
     "name": "sibweb/htdocs",
     "description": "Backend of the ViKM web app",
     "require": {
-        "slim/slim": "^3.0",
-		"phpoffice/phpexcel": "1.8.0",
-        "phpoffice/phpword": "v0.13.0",
-        "catfan/Medoo": "^1.2",
-	"sergeytsalkov/meekrodb": "*",
-	"phpmailer/phpmailer": "^5.2"
+        "slim/slim": "^3.0" //,
+//		"phpoffice/phpexcel": "1.8.0",
+//        "phpoffice/phpword": "v0.13.0",
+//        "catfan/Medoo": "^1.2",
+//	"sergeytsalkov/meekrodb": "*",
+//	 "phpmailer/phpmailer": "^5.2"
     },
     "authors": [
         {
