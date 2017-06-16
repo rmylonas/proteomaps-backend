@@ -20,7 +20,7 @@ function get_results($result_id){
     $motifs = parse_KLD_motifs($result_dir."/KLD/KLD.txt");
 
     // construct results
-    $res = array('result_id' => $result_id);
+    $motif_res = array();
 
     foreach($motifs as $motif){
        $img_files = get_img_filenames($result_dir."/logos/LoLa_".$motif."*");
@@ -30,10 +30,10 @@ function get_results($result_id){
        if(count($img_files) != count($pmw_values)) throw new Exception("Number of Logos and PWMs differ", 501);
 
        $res_func = function($id, $img, $pmw, $nr_pep){
-           return array('id' => $id+1, 'logo_img' => $img, 'PMW' => $pmw, 'nr_peptides' => $nr_pep);
+           return array('id' => (int)$id+1, 'logo_img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
        };
 
-       $res[$motif] = array_map(
+        $motif_res[$motif] = array_map(
            $res_func,
            range(0, count($img_files)-1),
            $img_files,
@@ -42,7 +42,7 @@ function get_results($result_id){
        );
     }
 
-    return $res;
+    return array('result_id' => $result_id, 'motifs' => $motif_res);
 }
 
 /**
