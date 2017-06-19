@@ -42,7 +42,27 @@ function get_results($result_id){
        );
     }
 
-    return array('result_id' => $result_id, 'motifs' => $motif_res);
+    // parse id of best cluster
+    $best_cluster = get_best_nlc($result_dir.'KLD/best_ncl.txt');
+
+    return array('result_id' => $result_id, 'motifs' => $motif_res, 'best_cluster' => $best_cluster);
+}
+
+
+
+/**
+ * get_best_nlc
+ *
+ * parse best cluster nr from KLD/best_ncl.txt
+ *
+ * @param string path to best_ncl.txt
+ * @return integer best cluster nr
+ * @author Roman
+ */
+function get_best_nlc($best_ncl_file){
+    $best_ncl = file_get_contents($best_ncl_file);
+    preg_match('/.+\:\s*(\d+)/', $best_ncl, $matches);
+    return intval($matches[1]);
 }
 
 /**

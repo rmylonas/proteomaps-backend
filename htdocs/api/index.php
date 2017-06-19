@@ -59,6 +59,15 @@ $app->get('/results/{result_id}', function ($request,$response,$result_id) {
 	return $response->withJson($results);
 });
 
+$app->get('/results/{result_id}/zip', function ($request,$response,$result_id) {
+    require 'results_zip.php';
+    $zip_file = get_results_zip($result_id['result_id']);
+    header('Content-Type: application/zip, application/octet-stream');
+    header('Content-Length: ' . filesize($zip_file));
+    readfile($zip_file);
+});
+
+
 $app->run();
 
 ?>
