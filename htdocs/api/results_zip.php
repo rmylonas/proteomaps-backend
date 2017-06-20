@@ -11,6 +11,9 @@
  */
 
 function get_results_zip($result_id){
+
+    if(! preg_match('/^\w{13}$/', $result_id)) throw new Exception("ERROR: invalid ResultId", 501);
+
     // the data directory
     $result_dir = DATA_PATH."/".$result_id."/results";
     $zip_file = DATA_PATH."/".$result_id."/".$result_id.".zip";
