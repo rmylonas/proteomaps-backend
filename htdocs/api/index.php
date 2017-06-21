@@ -67,6 +67,13 @@ $app->get('/results/{result_id}/zip', function ($request,$response,$result_id) {
     readfile($zip_file);
 });
 
+$app->get('/test-fasta', function ($request,$response,$result_id) {
+    $test_file = DATA_PATH."/test.fa";
+    header('Content-Type: text/plain');
+    header('Content-Length: ' . filesize($test_file));
+    readfile($test_file);
+});
+
 
 $app->run();
 
