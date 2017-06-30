@@ -45,8 +45,9 @@ function compute_clusters($upload_info, $nr_motifs){
  * @return array result_id and filename
  * @author Roman
  */
-function upload_fasta($dataset){
-    if(!isset($_FILES['file'])) throw new Exception("No file received", 501);
+function upload_fasta($dataset, $fasta_data){
+    error_log($fasta_data);
+    if(! (isset($_FILES['file']) || $fasta_data) ) throw new Exception("No file received or data provided", 501);
 
     // create a new ResultID
 	$result_id = uniqid();
@@ -56,15 +57,20 @@ function upload_fasta($dataset){
     if(!file_exists($input_dir)) mkdir($input_dir,0755,true);
 
     // move upload file to the right place
-    $filename = $_FILES['file']['name'];
-    if(file_exists($input_dir."/".$filename)){
-        $basename = pathinfo($filename, PATHINFO_FILENAME);
-        if(preg_match("/(.*)\.(\d+)$/",$basename,$regs)){
-            $filename = $regs[1].".".(intval($regs[2])+1).".".pathinfo($filename, PATHINFO_EXTENSION);
+    if(isset($_FILES['file'])){
+        $filename = $_FILES['file']['name'];
+        if(file_exists($input_dir."/".$filename)){
+            $basename = pathinfo($filename, PATHINFO_FILENAME);
+            if(preg_match("/(.*)\.(\d+)$/",$basename,$regs)){
+                $filename = $regs[1].".".(intval($regs[2])+1).".".pathinfo($filename, PATHINFO_EXTENSION);
+            }
+            else $filename = $basename.".1.".pathinfo($filename, PATHINFO_EXTENSION);
         }
-        else $filename = $basename.".1.".pathinfo($filename, PATHINFO_EXTENSION);
+        if(!move_uploaded_file($_FILES['file']['tmp_name'],$input_dir."/".$filename)) throw new Exception("Sorry, upload error !", 501);
+    }else{
+        $filename = 'peptides.fa';
+        file_put_contents($input_dir.$filename, $fasta_data);
     }
-    if(!move_uploaded_file($_FILES['file']['tmp_name'],$input_dir."/".$filename)) throw new Exception("Sorry, upload error !", 501);
 
     return array('result_id' => $result_id, 'filename' => $filename);
 }
