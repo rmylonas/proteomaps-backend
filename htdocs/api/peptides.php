@@ -46,7 +46,6 @@ function compute_clusters($upload_info, $nr_motifs){
  * @author Roman
  */
 function upload_fasta($dataset, $fasta_data){
-    error_log($fasta_data);
     if(! (isset($_FILES['file']) || $fasta_data) ) throw new Exception("No file received or data provided", 501);
 
     // create a new ResultID
