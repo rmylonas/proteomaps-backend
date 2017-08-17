@@ -74,6 +74,13 @@ $app->get('/test-fasta', function ($request,$response,$result_id) {
     readfile($test_file);
 });
 
+$app->get('/test-peptides', function ($request,$response,$result_id) {
+    $test_file = DATA_PATH."/test_peptides";
+    header('Content-Type: text/plain');
+    header('Content-Length: ' . filesize($test_file));
+    readfile($test_file);
+});
+
 
 $app->run();
 
