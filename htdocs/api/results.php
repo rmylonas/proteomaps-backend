@@ -22,26 +22,25 @@ function get_results($result_id){
     // parse motifs nr from KLD.txt file
     $motifs = parse_KLD_motifs($result_dir."/KLD/best_ncl.txt");
 
+    $html_content = file_get_contents($result_dir."/logos.html");
+
     // construct results
     $motif_res = array();
 
     foreach($motifs as $motif){
-       $img_files = get_img_filenames($result_dir."/logos/LoLa_*", $motif);
-       $nr_peps = get_nr_peps($img_files);
-       $pmw_values = get_pmw_values($result_dir."/Multiple_PWMs/PWM_".$motif."*");
+        $info_from_html = get_info_from_html($html_content, $motif);
+        if(count($info_from_html) <= 0 || count($info_from_html[0]) <= 1) throw new Exception("Could not parse info from logos.html", 501);
 
-       if(count($img_files) != count($pmw_values)) throw new Exception("Number of Logos and PWMs differ", 501);
-
-       $res_func = function($id, $img, $pmw, $nr_pep){
-           return array('id' => (int)$id+1, 'logo_img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
+       $res_func = function($img, $id, $nr_pep, $pmw){
+           return array('id' => $id, 'logo_img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
        };
 
         $motif_res[$motif] = array_map(
-           $res_func,
-           range(0, count($img_files)-1),
-           $img_files,
-           $pmw_values,
-           $nr_peps
+            $res_func,
+            $info_from_html[1],
+            $info_from_html[2],
+            $info_from_html[3],
+            $info_from_html[4]
        );
     }
 
@@ -51,6 +50,20 @@ function get_results($result_id){
     return array('result_id' => $result_id, 'motifs' => $motif_res, 'best_cluster' => $best_cluster);
 }
 
+
+/**
+ * get_info_from_html
+ *
+ * parse image file names and the corresponding infos from logos.html
+ *
+ * @param $html_file
+ * @return array of array
+ */
+function get_info_from_html($html_content, $motif){
+    $pattern = '/(LoLa_L[0-9]+_'.$motif.'.+png).+\<p\>(Trash|[0-9]+).+?([0-9]+).+?([\.|0-9]+).+\<\/p\>/';
+    preg_match_all($pattern, $html_content, $out);
+    return $out;
+}
 
 
 /**

@@ -7,15 +7,11 @@ $filename = (isset($_GET['filename'])) ? filter_input(INPUT_GET,'filename',FILTE
 
 // check result_id and filename for validity
 if(! preg_match('/^\w{13}$/', $result_id)) throw new Exception("ERROR: invalid ResultId", 501);
-if(! preg_match('/^LoLa_L[\d|\-|_]+\.png$/', $filename)) throw new Exception("ERROR: invalid filename", 501);
+if(! preg_match('/^LoLa_L[\d|\-|_|Trash]+\.png$/', $filename)) throw new Exception("ERROR: invalid filename", 501);
 
 $path = DATA_PATH."/".$result_id."/results/logos/".$filename;
 
 $type = 'image/png';
-//$path_parts = pathinfo($path);
-//$extension= $path_parts['extension'];
-//$type = "image/$extension";
-
 
 header('Content-Type:'.$type);
 header('Content-Length: ' . filesize($path));
