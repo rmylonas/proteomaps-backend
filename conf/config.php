@@ -23,6 +23,6 @@ if(!defined('DEBUG')) define('DEBUG',false);
 
 if(!defined('GRIP_PATH')) define('GRIP_PATH',"/usr/local/bin/grip");
 
-if(!defined('MIXMHCP_PATH')) define('MIXMHCP_PATH',"../../tools/MixMHCp1.1/MixMHCp");
+if(!defined('MIXMHCP_PATH')) define('MIXMHCP_PATH',"../../tools/MixMHCp2.0/MixMHCp");
 
 ?>

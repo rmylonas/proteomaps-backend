@@ -20,13 +20,13 @@ function get_results($result_id){
     if(! file_exists($result_dir)) throw new Exception("There are no results available for Result ID <strong>".$result_id."</strong>", 501);
 
     // parse motifs nr from KLD.txt file
-    $motifs = parse_KLD_motifs($result_dir."/KLD/KLD.txt");
+    $motifs = parse_KLD_motifs($result_dir."/KLD/best_ncl.txt");
 
     // construct results
     $motif_res = array();
 
     foreach($motifs as $motif){
-       $img_files = get_img_filenames($result_dir."/logos/LoLa_".$motif."*");
+       $img_files = get_img_filenames($result_dir."/logos/LoLa_*", $motif);
        $nr_peps = get_nr_peps($img_files);
        $pmw_values = get_pmw_values($result_dir."/Multiple_PWMs/PWM_".$motif."*");
 
@@ -117,12 +117,15 @@ function get_pmw_values($pattern){
  * @return array
  * @author Roman
  */
-function get_img_filenames($pattern){
-    $img_files = glob($pattern);
+function get_img_filenames($pattern, $motif){
+    // get only the images without a 'Trash' in their names
+    $all_img_files = glob($pattern);
+    $img_files = preg_grep('/LoLa_L[0-9]+_'.$motif.'_/', $all_img_files);
+    $img_files_no_trash = preg_grep('/Trash/', $img_files, PREG_GREP_INVERT);
 
     return array_map(function($p){
         return basename($p);
-    }, $img_files);
+    }, $img_files_no_trash);
 }
 
 
@@ -137,8 +140,14 @@ function get_img_filenames($pattern){
  */
 function parse_KLD_motifs($kld_file){
     $content = file_get_contents($kld_file);
-    preg_match_all("/(\\d+)\\s+.*/", $content, $out);
-    return $out[1];
+    $content_array_all = explode("\n", $content);
+    $content_array = array_slice($content_array_all, 1, -1);
+
+    return array_map(function($p){
+        preg_match("/(\\d+)\\s+.*/", $p, $out);
+        return $out[1];
+    }, $content_array);
+
 }
 
 
