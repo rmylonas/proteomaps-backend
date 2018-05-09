@@ -24,30 +24,56 @@ function get_results($result_id){
 
     $html_content = file_get_contents($result_dir."/logos.html");
 
+    // get the x-mers and the default x-mer.
+    $x_mers = get_x_mers($html_content);
+    $default_x_mer = get_default_x_mer($html_content);
+
     // construct results
-    $motif_res = array();
+    $x_mers_res = array();
+    foreach($x_mers as $x_mer){
+        $motif_res = array();
 
-    foreach($motifs as $motif){
-        $info_from_html = get_info_from_html($html_content, $motif);
-        if(count($info_from_html) <= 0 || count($info_from_html[0]) <= 1) throw new Exception("Could not parse info from logos.html", 501);
+        $x_mer_content = file_get_contents($result_dir."/logos_html/logos_L".$x_mer.".html");
 
-       $res_func = function($img, $id, $nr_pep, $pmw){
-           return array('id' => $id, 'logo_img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
-       };
+        foreach($motifs as $motif){
 
-        $motif_res[$motif] = array_map(
-            $res_func,
-            $info_from_html[1],
-            $info_from_html[2],
-            $info_from_html[3],
-            $info_from_html[4]
-       );
+            $info_from_html = get_info_from_html($x_mer_content, $motif);
+            if(count($info_from_html) <= 0 || count($info_from_html[0]) < 1) throw new Exception("Could not parse info from logos.html", 501);
+
+            $res_func = function($img, $id, $nr_pep, $pmw){
+                return array('id' => $id, 'logo_img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
+            };
+
+            $motif_res[$motif] = array_map(
+                $res_func,
+                $info_from_html[1],
+                $info_from_html[2],
+                $info_from_html[3],
+                $info_from_html[4]
+            );
+        }
+
+        // parse id of best cluster if we're in the default x-mer
+        $best_cluster = ($x_mer == $default_x_mer) ? (get_best_nlc($result_dir.'KLD/best_ncl.txt')) : (undefined);
+
+        $x_mers_res[$x_mer] = array('motifs' => $motif_res, 'best_cluster' => $best_cluster);
     }
 
-    // parse id of best cluster
-    $best_cluster = get_best_nlc($result_dir.'KLD/best_ncl.txt');
+    return array('result_id' => $result_id, 'x_mers_data' => $x_mers_res, 'default_x_mer' => $default_x_mer, 'x_mers' => $x_mers);
+}
 
-    return array('result_id' => $result_id, 'motifs' => $motif_res, 'best_cluster' => $best_cluster);
+
+function get_x_mers($html_content){
+    $pattern = '/\>([0-9]+)\-mers\</';
+    preg_match_all($pattern, $html_content, $out);
+    return $out[1];
+}
+
+
+function get_default_x_mer($html_content){
+    $pattern = '/core \(([0-9]+)\-mers\)/';
+    preg_match_all($pattern, $html_content, $out);
+    return $out[1][0];
 }
 
 

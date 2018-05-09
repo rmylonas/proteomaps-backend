@@ -48,7 +48,7 @@ $app->post('/peptides', function ($request, $response, $nr_motifs){
 	require 'peptides.php';
     $dataset = $request->getParsedBody();
     $data_info = upload_fasta($dataset, $_POST['data']);
-	$result = compute_clusters($data_info, $_POST['nr_of_motifs'], $_POST['core_length']);
+	$result = compute_clusters($data_info, $_POST['nr_of_motifs'], $_POST['core_length'], $_POST['use_trash']);
     return $response->withJson($result);
 });
 
