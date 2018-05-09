@@ -8,7 +8,7 @@
  * @return array result_id,
  * @author Roman
  */
-function compute_clusters($upload_info, $nr_motifs){
+function compute_clusters($upload_info, $nr_motifs, $core_length){
 
     $result_id = $upload_info["result_id"];
     $filename = $upload_info["filename"];
@@ -25,7 +25,10 @@ function compute_clusters($upload_info, $nr_motifs){
     $log_file = $result_dir."php_cmd.log";
 
     // call MixMHCp
-    $cmd = MIXMHCP_PATH." -i ".$input_file." -o ".$result_dir. " -m ".$nr_motifs;
+    $cmd = MIXMHCP_PATH." -i ".$input_file.
+        " -o ".$result_dir.
+        " -m ".$nr_motifs.
+        " -lc ".$core_length;
     exec($cmd, $output);
     file_put_contents($log_file, $output);
 
