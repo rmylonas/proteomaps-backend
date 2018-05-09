@@ -28,7 +28,7 @@ function get_results($result_id){
     $x_mers = get_x_mers($html_content);
     $default_x_mer = get_default_x_mer($html_content);
 
-    // construct results
+    // construct x-mer results
     $x_mers_res = array();
     foreach($x_mers as $x_mer){
         $motif_res = array();
@@ -41,7 +41,7 @@ function get_results($result_id){
             if(count($info_from_html) <= 0 || count($info_from_html[0]) < 1) throw new Exception("Could not parse info from logos.html", 501);
 
             $res_func = function($img, $id, $nr_pep, $pmw){
-                return array('id' => $id, 'logo_img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
+                return array('id' => $id, 'img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
             };
 
             $motif_res[$motif] = array_map(
@@ -59,7 +59,25 @@ function get_results($result_id){
         $x_mers_res[$x_mer] = array('motifs' => $motif_res, 'best_cluster' => $best_cluster);
     }
 
-    return array('result_id' => $result_id, 'x_mers_data' => $x_mers_res, 'default_x_mer' => $default_x_mer, 'x_mers' => $x_mers);
+    // construct length distribution restuls
+    $length_dist_res = array();
+    $length_dist_content = file_get_contents($result_dir."/length_distribution.html");
+    
+    foreach($motifs as $motif){
+        $info_from_html = get_length_info_from_html($length_dist_content, $motif);
+
+        $res_func = function($id, $img){
+            return array('id' => $id, 'img' => $img);
+        };
+
+        $length_dist_res[$motif] = array_map(
+            $res_func,
+            range(0, count($info_from_html)-1),
+            $info_from_html
+        );
+    }
+
+    return array('result_id' => $result_id, 'x_mers_data' => $x_mers_res, 'default_x_mer' => $default_x_mer, 'x_mers' => $x_mers, 'length_dist' => $length_dist_res);
 }
 
 
@@ -89,6 +107,20 @@ function get_info_from_html($html_content, $motif){
     $pattern = '/(LoLa_L[0-9]+_'.$motif.'.+png).+\<p\>(Trash|[0-9]+).+?([0-9]+).+?([\.|0-9]+).+\<\/p\>/';
     preg_match_all($pattern, $html_content, $out);
     return $out;
+}
+
+
+/**
+ * parse filenames from length_distribution.html
+ *
+ * @param $html_content
+ * @param $motif
+ * @return mixed
+ */
+function get_length_info_from_html($html_content, $motif){
+    $pattern = '/(lg_'.$motif.'.+png)/';
+    preg_match_all($pattern, $html_content, $out);
+    return $out[1];
 }
 
 
