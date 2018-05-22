@@ -10,14 +10,16 @@ if(! preg_match('/^\w{13}$/', $result_id)) throw new Exception("ERROR: invalid R
 $img_path = "";
 // check filenames and set the path
 if(preg_match('/^LoLa_L[\d|\-|_|Trash]+\.png$/', $filename)){
-    $img_path = "/results/logos/";
+    $img_path = $result_id."/results/logos/".$filename;
 }elseif (preg_match('/^lg_[\d|_]+\.png$/', $filename)){
-    $img_path = "/results/weights/plots/";
+    $img_path = $result_id."/results/weights/plots/".$filename;
+}elseif (preg_match('/empty.png/', $filename)){
+    $img_path = $filename;
 }else{
     throw new Exception("ERROR: invalid filename", 501);
 }
 
-$path = DATA_PATH."/".$result_id.$img_path.$filename;
+$path = DATA_PATH."/".$img_path;
 
 $type = 'image/png';
 

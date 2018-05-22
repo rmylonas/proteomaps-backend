@@ -25,6 +25,16 @@ function get_results($result_id){
     $x_mers = get_x_mers($html_content);
     $default_x_mer = get_default_x_mer($html_content);
 
+    // the function used to construct the result array
+    $res_func = function($logo_img, $id, $nr_pep, $pmw){
+        $img = "empty.png";
+        if($logo_img){
+            $img = preg_replace('/"|\..\/logos\//', '', $logo_img);
+        }
+
+        return array('id' => $id, 'img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
+    };
+
     // construct x-mer results
     $x_mers_res = array();
     foreach($x_mers as $x_mer){
@@ -32,23 +42,20 @@ function get_results($result_id){
 
         $x_mer_content = file_get_contents($result_dir."/logos_html/logos_L".$x_mer.".html");
         $motifs = get_motifs_from_html($x_mer_content);
-        file_put_contents('php://stderr', print_r($motifs, TRUE));
+        #$motifs = [9];
 
         foreach($motifs as $motif){
-
+            // parse the information from the logos html files
             $info_from_html = get_info_from_html($x_mer_content, $motif);
-            if(count($info_from_html) <= 0 || count($info_from_html[0]) < 1) throw new Exception("Could not parse info from logos.html", 501);
-
-            $res_func = function($img, $id, $nr_pep, $pmw){
-                return array('id' => $id, 'img' => $img, 'PMW' => (float)$pmw, 'nr_peptides' => (int)$nr_pep);
-            };
+            if(count($info_from_html) <= 0 || count($info_from_html[3]) < 1) throw new Exception("Could not parse info from logos.html", 501);
 
             $motif_res[$motif] = array_map(
                 $res_func,
-                $info_from_html[1],
+                #$info_from_html[1],
                 $info_from_html[2],
                 $info_from_html[3],
-                $info_from_html[4]
+                $info_from_html[4],
+                $info_from_html[5]
             );
         }
 
@@ -100,9 +107,16 @@ function get_default_x_mer($html_content){
  * @return array of array
  */
 function get_info_from_html($html_content, $motif){
-    $pattern = '/(LoLa_L[0-9]+_'.$motif.'.+png).+\<p\>(Trash|[0-9]+).+?([0-9]+).+?([\.|0-9]+).+\<\/p\>/';
-    preg_match_all($pattern, $html_content, $out);
-    return $out;
+
+    // first we get the part of the html we're interested in
+    $motif_pattern = '/'.$motif.' motif(.+?)spacer/s';
+    preg_match($motif_pattern, $html_content, $motif_out);
+
+    // attention: because we cannot match an empty something, we're leaving the trailing " in the logos filepath and remove it afterwards.
+    $entry_pattern = '/img src\=("")?(.+LoLa_L[0-9]+_'.$motif.'.+png")? width.+\<p\>(Trash|[0-9]+).+?([0-9]+).+?([\.|0-9]+).+\<\/p\>/';
+    preg_match_all($entry_pattern, $motif_out[1], $entry_out);
+
+    return $entry_out;
 }
 
 
