@@ -19,9 +19,6 @@ function get_results($result_id){
 
     if(! file_exists($result_dir)) throw new Exception("There are no results available for Result ID <strong>".$result_id."</strong>", 501);
 
-    // parse motifs nr from KLD.txt file
-    $motifs = parse_KLD_motifs($result_dir."/KLD/best_ncl.txt");
-
     $html_content = file_get_contents($result_dir."/logos.html");
 
     // get the x-mers and the default x-mer.
@@ -34,6 +31,8 @@ function get_results($result_id){
         $motif_res = array();
 
         $x_mer_content = file_get_contents($result_dir."/logos_html/logos_L".$x_mer.".html");
+        $motifs = get_motifs_from_html($x_mer_content);
+        file_put_contents('php://stderr', print_r($motifs, TRUE));
 
         foreach($motifs as $motif){
 
@@ -53,10 +52,7 @@ function get_results($result_id){
             );
         }
 
-        // parse id of best cluster if we're in the default x-mer
-        $best_cluster = ($x_mer == $default_x_mer) ? (get_best_nlc($result_dir.'KLD/best_ncl.txt')) : (undefined);
-
-        $x_mers_res[$x_mer] = array('motifs' => $motif_res, 'best_cluster' => $best_cluster);
+        $x_mers_res[$x_mer] = array('motifs' => $motif_res);
     }
 
     // construct length distribution restuls
@@ -111,6 +107,21 @@ function get_info_from_html($html_content, $motif){
 
 
 /**
+ * get_motifs_from_html
+ *
+ * parse motifs from given html file
+ *
+ * @param $html_file_content
+ * @return array of motif numbers
+ */
+function get_motifs_from_html($html_content){
+    $pattern = '/([0-9]+) motif/';
+    preg_match_all($pattern, $html_content, $out);
+    return $out[1];
+}
+
+
+/**
  * parse filenames from length_distribution.html
  *
  * @param $html_content
@@ -121,104 +132,6 @@ function get_length_info_from_html($html_content, $motif){
     $pattern = '/(lg_'.$motif.'.+png)/';
     preg_match_all($pattern, $html_content, $out);
     return $out[1];
-}
-
-
-/**
- * get_best_nlc
- *
- * parse best cluster nr from KLD/best_ncl.txt
- *
- * @param string path to best_ncl.txt
- * @return integer best cluster nr
- * @author Roman
- */
-function get_best_nlc($best_ncl_file){
-    $best_ncl = file_get_contents($best_ncl_file);
-    preg_match('/.+\:\s*(\d+)/', $best_ncl, $matches);
-    return intval($matches[1]);
-}
-
-/**
- * get_nr_peps
- *
- * parse number of peptides from logo file name
- *
- * @param string $img_names Logo file name
- * @return array of nr of peptides
- * @author Roman
- */
-function get_nr_peps($img_names){
-    return array_map(function($name){
-        preg_match('/.+\-(\d+)\.png$/', $name, $matches);
-        return $matches[1];
-    }, $img_names);
-}
-
-/**
- * get_pmw_values
- *
- * parse PMW values from PMW files
- *
- * @param string $pattern the file search pattern
- * @return array of PMW values
- * @author Roman
- */
-function get_pmw_values($pattern){
-    $pmw_files = glob($pattern);
-
-    $pmw_parsing = function($file){
-        $filename = basename($file);
-        $pmw_name = str_replace(".txt", "", $filename);
-        $pmw_content = file_get_contents($file);
-        preg_match('/'.$pmw_name.'\s+([\d|\.]+).*/', $pmw_content, $matches);
-        return $matches[1];
-    };
-
-    return array_map($pmw_parsing, $pmw_files);
-}
-
-
-/**
- * get_img_filenames
- *
- * get all the Logos filenames for a given directory
- *
- * @param string $pattern the file search pattern
- * @return array
- * @author Roman
- */
-function get_img_filenames($pattern, $motif){
-    // get only the images without a 'Trash' in their names
-    $all_img_files = glob($pattern);
-    $img_files = preg_grep('/LoLa_L[0-9]+_'.$motif.'_/', $all_img_files);
-    $img_files_no_trash = preg_grep('/Trash/', $img_files, PREG_GREP_INVERT);
-
-    return array_map(function($p){
-        return basename($p);
-    }, $img_files_no_trash);
-}
-
-
-/**
- * parse_KLD_motifs
- *
- * get an array of motifs
- *
- * @param KLD file path
- * @return array of motif numbers
- * @author Roman
- */
-function parse_KLD_motifs($kld_file){
-    $content = file_get_contents($kld_file);
-    $content_array_all = explode("\n", $content);
-    $content_array = array_slice($content_array_all, 1, -1);
-
-    return array_map(function($p){
-        preg_match("/(\\d+)\\s+.*/", $p, $out);
-        return $out[1];
-    }, $content_array);
-
 }
 
 
